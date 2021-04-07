@@ -36,7 +36,7 @@ class Author(models.Model):
 
 class Book_Author(models.Model): # seperately Implementing m2m relationship
   def __str__(self):
-      return self.book + " | " + self.author
+    return self.book.title + " | " + self.author.name
   
   book = models.ForeignKey(Book, on_delete=models.CASCADE)
   author = models.ForeignKey(Author, on_delete=models.CASCADE)
