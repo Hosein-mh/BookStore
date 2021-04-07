@@ -20,6 +20,9 @@ class Category(models.Model):
                     related_name='children', blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
   updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+  
+  class Meta:
+    verbose_name_plural = "categories"
 
 
 class Author(models.Model):
