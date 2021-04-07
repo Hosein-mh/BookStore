@@ -1,5 +1,9 @@
 from books.models import Book, Author, Book_Author, Category
 
+def is_valid_authors(*, author_ids):
+  # check if author_ids are list of integer ids
+  return author_ids is not None and isinstance(author_ids, list) and all(isinstance(a_id, (int)) for a_id in author_ids)
+
 def add_book_item(*, title, price, category, author_ids):
   valid_authors = []
   message = ""
