@@ -1,4 +1,5 @@
 from django.db import models
+from users.models import User
 
 class Book(models.Model):
   def __str__(self):
@@ -6,6 +7,7 @@ class Book(models.Model):
 
   title = models.CharField(max_length=255)
   price = models.IntegerField(default=0)
+  merchant = models.ForeignKey(User, on_delete=models.CASCADE)
   category = models.ForeignKey('Category', on_delete=models.CASCADE)
   created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
   updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
