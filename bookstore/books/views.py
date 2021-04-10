@@ -2,11 +2,11 @@ from django.shortcuts import render, get_object_or_404
 
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, SAFE_METHODS
+from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly, SAFE_METHODS
 
 from books.models import Book, Author, Category, Book_Author
 from books.interactors import add_book_item, is_valid_authors, update_book_item
-from books.permissions import IsMerchant
+from books.permissions import IsMerchantOrReadOnly
 from users.models import User, UserTypeEnum
 
 from books.serializers import AuthorSerializer, BookSerializer, \
@@ -26,7 +26,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class BookViewSet(viewsets.ModelViewSet):
   serializer_class = BookSerializer
-  permission_classes = (IsAdminUser, IsAuthenticatedOrReadOnly)
+  permission_classes = (IsAuthenticatedOrReadOnly,)
   
   # Merchant only can see, update and delete his own books
   def get_queryset(self):
@@ -34,12 +34,16 @@ class BookViewSet(viewsets.ModelViewSet):
     if self.request.method in SAFE_METHODS or self.request.user.is_staff:
       return Book.objects.all()
     else:
-      return Book.objects.filter(merchant=request.user)
+      books = Book.objects.filter(merchant=self.request.user)
+      print("books for this merchant:", books)
+      return books
 
 
   def create(self, request, *args, **kwargs):
     author_ids = request.data.get('author_ids', None)
     merchant = request.user
+    permission_classes = (IsMerchantOrReadOnly,)
+
 
     # staff can add books for merchants
     if request.user.is_staff:
@@ -66,10 +70,14 @@ class BookViewSet(viewsets.ModelViewSet):
 
 
   def update(self, request, pk=None):
+    permission_classes = (IsMerchantOrReadOnly,)
+
     try:
-      instance = self.get_queryset().filter(pk=pk).first()
+      instance = self.get_queryset().get(pk=pk)
     except Book.DoesNotExist:
-      return Response({"Book": "Not found"}, status=404)
+      return Response({"Book": "no books founds"}, status=404)
+
+    print('found book:', instance)
 
     insert_status, item = update_book_item(
       request = request,
@@ -78,7 +86,7 @@ class BookViewSet(viewsets.ModelViewSet):
       price = request.data['price'],
       category = request.data['category'],
       author_ids = request.data['author_ids'],
-      merchant_id = request.data['merchant_id']
+      merchant_id = request.user.id
     )
 
     return Response(item, status=insert_status)
