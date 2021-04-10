@@ -65,7 +65,7 @@ def update_book_item(*, request, instance, title, price, category, author_ids, m
       return 404, None
 
   # get the past book authors and update them with new data
-  book_authors = [book_author.author.id for book_author in Book_Author.objects.filter(book=instance)]
+  book_authors = [book_author.author_id for book_author in Book_Author.objects.filter(book=instance)]
 
   for author_id in author_ids:
     author = Author.objects.filter(id=author_id).first()
@@ -74,10 +74,11 @@ def update_book_item(*, request, instance, title, price, category, author_ids, m
       if author.id not in book_authors:
         Book_Author.objects.create(book=instance, author=author)
 
-  # for book_author in book_authors:
-  #   if book_author not in valid_authors:
-  #     print('not in book authors:', book_author)
-  #     Book_Author.objects.filter(book=instance, author=book_author).delete()
+  valid_author_ids = [author.id for author in valid_authors]
+
+  for book_author in book_authors:
+    if book_author not in valid_author_ids:
+      Book_Author.objects.filter(book=instance, author=book_author).delete()
 
 
 
