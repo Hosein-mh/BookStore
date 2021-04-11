@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     # internal apps
     'books',
     'users',
+    'cart_api',
 ]
 
 MIDDLEWARE = [
