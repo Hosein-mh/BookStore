@@ -9,6 +9,7 @@ class Book(models.Model):
   price = models.IntegerField(default=0)
   merchant = models.ForeignKey(User, on_delete=models.CASCADE)
   category = models.ForeignKey('Category', on_delete=models.CASCADE)
+  tags = models.ManyToManyField("Tag", related_name='books', blank=True, null=True)
   created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
   updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
@@ -35,6 +36,15 @@ class Author(models.Model):
   created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
   updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
+
+class Tag(models.Model):
+  def __str__(self):
+    return self.name
+
+  name = models.CharField(max_length=50)
+  created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+  updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+      
 
 class Book_Author(models.Model): # seperately Implementing m2m relationship
   def __str__(self):
