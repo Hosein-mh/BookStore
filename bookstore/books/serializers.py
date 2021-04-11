@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from books.models import Book, Author, Category, Book_Author
+from books.models import Book, Author, Category, Book_Author, Tag
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -19,12 +19,18 @@ class BookAuthorSerializer(serializers.ModelSerializer):
     model = Book_Author
     fields = ('id', 'book', 'author')
 
+class TagSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Tag
+    fields = ('id', 'name')
+
 class BookSerializer(serializers.ModelSerializer):
   authors = serializers.SerializerMethodField()
+  tags = TagSerializer(read_only=True, many=True)
 
   class Meta:
     model = Book
-    fields = ('id', 'title', 'merchant', 'category', 'price', 'authors')
+    fields = ('id', 'title', 'tags', 'merchant', 'category', 'price', 'authors')
     
 
   def get_authors(self, obj):
