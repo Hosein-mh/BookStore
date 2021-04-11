@@ -9,7 +9,7 @@ class Book(models.Model):
   price = models.IntegerField(default=0)
   merchant = models.ForeignKey(User, on_delete=models.CASCADE)
   category = models.ForeignKey('Category', on_delete=models.CASCADE)
-  tags = models.ManyToManyField("Tag", related_name='books', blank=True, null=True)
+  tags = models.ManyToManyField("Tag", related_name='books', blank=True)
   created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
   updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
