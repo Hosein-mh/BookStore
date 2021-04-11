@@ -6,6 +6,6 @@ from .views import AuthorViewSet, CategoryViewSet, BookViewSet
 router = SimpleRouter()
 router.register('authors', AuthorViewSet, basename="authors")
 router.register('categories', CategoryViewSet, basename="categories")
-router.register('books', BookViewSet, basename="books")
+router.register('', BookViewSet, basename="books")
 
 urlpatterns = router.urls
