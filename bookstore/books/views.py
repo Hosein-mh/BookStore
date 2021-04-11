@@ -1,4 +1,6 @@
 from django.shortcuts import render, get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from books.filters import BookFilter
 
 from rest_framework import viewsets, status
 from rest_framework.response import Response
@@ -27,21 +29,35 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class BookViewSet(viewsets.ModelViewSet):
   serializer_class = BookSerializer
   permission_classes = (IsAuthenticatedOrReadOnly,)
+  filter_backends = (DjangoFilterBackend,)
+  filter_class = BookFilter
   
   # Merchant only can see, update and delete his own books
   def get_queryset(self):
+    """ get tags from query_params"""
+    tags = None
+    if self.request.query_params:
+      tags = self.request.query_params['tags'].split(' ')
+      print('tags:', tags)
+
     """ access to staff users and merchants or read only """
     if self.request.method in SAFE_METHODS or self.request.user.is_staff:
-      return Book.objects.all()
+      self.queryset = Book.objects.all()
     else:
-      books = Book.objects.filter(merchant=self.request.user)
-      print("books for this merchant:", books)
-      return books
+      self.queryset = Book.objects.filter(merchant=self.request.user)
+    
+    if tags:
+      return self.queryset.filter(tags__name__in=tags)
+    else: return self.queryset
 
 
   def create(self, request, *args, **kwargs):
     author_ids = request.data.get('author_ids', None)
-    merchant = request.user
+    merchant = None
+
+    # merchants can add books for own
+    if request.user.user_type == UserTypeEnum.MERCHANT.value:
+      merchant = request.user.id
     permission_classes = (IsMerchantOrReadOnly,)
 
 
@@ -61,8 +77,9 @@ class BookViewSet(viewsets.ModelViewSet):
       title = request.data['title'],
       price = request.data['price'],
       category = request.data['category'],
+      tags = request.data['tags'],
       author_ids = author_ids,
-      merchant_id = merchant
+      merchant_id = merchant,
     )
 
     serializer = self.get_serializer(item)
@@ -83,6 +100,7 @@ class BookViewSet(viewsets.ModelViewSet):
       request = request,
       instance = instance,
       title = request.data['title'],
+      tags = request.data['tags'],
       price = request.data['price'],
       category = request.data['category'],
       author_ids = request.data['author_ids'],
