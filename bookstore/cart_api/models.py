@@ -6,7 +6,7 @@ from books.models import Book
 # Create your models here.
 class Cart(models.Model):
   status = models.CharField(max_length=255, blank=True, null=True)
-  user = models.ForeignKey(User, related_name="carts", on_delete=models.SET_NULL, null=True)
+  user = models.OneToOneField(User, on_delete=models.CASCADE)
   items = models.ManyToManyField(Book)    
   created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
   updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
