@@ -1,7 +1,16 @@
 from django.db import models
 from users.models import User
 
-class Book(models.Model):
+class TimeStampedModel(models.Model):
+  ''' 
+    An abstract base Model for auto creating timestamps
+  '''
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_at = models.DateTimeField(auto_now=True)
+  class Meta:
+    abstract=True
+
+class Book(TimeStampedModel):
   def __str__(self):
     return self.title
 
@@ -10,40 +19,31 @@ class Book(models.Model):
   merchant = models.ForeignKey(User, on_delete=models.CASCADE)
   category = models.ForeignKey('Category', on_delete=models.CASCADE)
   tags = models.ManyToManyField("Tag", related_name='books', blank=True)
-  created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-  updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
 
-class Category(models.Model):
+class Category(TimeStampedModel):
   def __str__(self):
     return self.name
   
   name = models.CharField(max_length=255)
   parent = models.ForeignKey('Category', on_delete=models.PROTECT,
                     related_name='children', blank=True, null=True)
-  created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-  updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
-  
   class Meta:
     verbose_name_plural = "categories"
 
 
-class Author(models.Model):
+class Author(TimeStampedModel):
   def __str__(self):
       return self.name
   
   name = models.CharField(max_length=255)
-  created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-  updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
 
-class Tag(models.Model):
+class Tag(TimeStampedModel):
   def __str__(self):
     return self.name
 
   name = models.CharField(max_length=50)
-  created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-  updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
       
 
 class Book_Author(models.Model): # seperately Implementing m2m relationship

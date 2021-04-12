@@ -30,7 +30,7 @@ class BookSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Book
-    fields = ('id', 'title', 'tags', 'merchant', 'category', 'price', 'authors')
+    fields = ('id', 'title', 'tags', 'merchant', 'category', 'price', 'authors', 'created_at', 'updated_at')
     
 
   def get_authors(self, obj):
