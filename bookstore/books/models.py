@@ -20,6 +20,12 @@ class Book(TimeStampedModel):
   category = models.ForeignKey('Category', on_delete=models.CASCADE)
   tags = models.ManyToManyField("Tag", related_name='books', blank=True)
 
+  @property
+  def authors(self):
+    book_author_qs = Book_Author.objects.filter(book__title=self.title)
+    authors = [obj.author for obj in book_author_qs]
+    return authors
+    
 
 class Category(TimeStampedModel):
   def __str__(self):
