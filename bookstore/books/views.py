@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly, S
 
 from books.models import Book, Author, Category, Book_Author
 from books.interactors import add_book_item, is_valid_authors, update_book_item
-from books.permissions import IsMerchantOrReadOnly
+from books.permissions import IsMerchantOrReadOnly, isAdminOrMerchantOrReadOnly
 from users.models import User, UserTypeEnum
 
 from books.serializers import AuthorSerializer, BookSerializer, \
@@ -17,13 +17,13 @@ from books.serializers import AuthorSerializer, BookSerializer, \
 class AuthorViewSet(viewsets.ModelViewSet):
   queryset = Author.objects.all()
   serializer_class = AuthorSerializer
-  # permission_classes = (IsAuthenticatedOrReadOnly,) #change it to isAsminOrMerchantOrReadOnly
+  permission_classes = (isAdminOrMerchantOrReadOnly,)
   
 
 class CategoryViewSet(viewsets.ModelViewSet):
   queryset = Category.objects.all()
   serializer_class = CategorySerializer
-  permission_classes = (IsAuthenticatedOrReadOnly,)
+  permission_classes = (isAdminOrMerchantOrReadOnly,)
 
 
 class BookViewSet(viewsets.ModelViewSet):
