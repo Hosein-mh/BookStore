@@ -119,4 +119,4 @@ def update_book_item(*, request, instance, title, price, category, author_ids, m
         instance.tags.add(created_tag)
 
   instance.save()
-  return 200, {"ok": "update successfully"}
+  return 200, {"ok": "updated successfully."}

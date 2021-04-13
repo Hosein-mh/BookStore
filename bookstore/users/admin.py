@@ -15,5 +15,7 @@ class UserAdmin(BaseUserAdmin):
     fieldsets = BaseUserAdmin.fieldsets + (
       ('Type', {'fields': ('user_type',)}),
     )
+    list_filter = ['is_staff', 'is_active', 'user_type']
+    list_editable = ['user_type']
 
 admin.site.register(User, UserAdmin)

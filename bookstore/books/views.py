@@ -28,7 +28,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class BookViewSet(viewsets.ModelViewSet):
   serializer_class = BookSerializer
-  permission_classes = (IsAuthenticatedOrReadOnly,)
+  permission_classes = (IsMerchantOrReadOnly,)
   filter_backends = (DjangoFilterBackend,)
   filter_class = BookFilter
   
@@ -37,8 +37,10 @@ class BookViewSet(viewsets.ModelViewSet):
     """ get tags from query_params"""
     tags = None
     if self.request.query_params:
-      tags = self.request.query_params['tags'].split(' ')
-      print('tags:', tags)
+      try:
+        tags = self.request.query_params['tags'].split(' ')
+      except:
+        tags = None
 
     """ access to staff users and merchants or read only """
     if self.request.method in SAFE_METHODS or self.request.user.is_staff:
@@ -58,7 +60,6 @@ class BookViewSet(viewsets.ModelViewSet):
     # merchants can add books for own
     if request.user.user_type == UserTypeEnum.MERCHANT.value:
       merchant = request.user.id
-    permission_classes = (IsMerchantOrReadOnly,)
 
 
     # staff can add books for merchants
@@ -92,18 +93,18 @@ class BookViewSet(viewsets.ModelViewSet):
     try:
       instance = self.get_queryset().get(pk=pk)
     except Book.DoesNotExist:
-      return Response({"Book": "no books founds"}, status=404)
+      return Response({"Book": "no books founds in your merchant books"}, status=404)
 
     print('found book:', instance)
 
     insert_status, item = update_book_item(
       request = request,
       instance = instance,
-      title = request.data['title'],
-      tags = request.data['tags'],
-      price = request.data['price'],
-      category = request.data['category'],
-      author_ids = request.data['author_ids'],
+      title = request.data.get('title', instance.title),
+      tags = request.data.get('tags', None),
+      price = request.data.get('price', instance.price),
+      category = request.data.get('category', instance.category),
+      author_ids = request.data.get('author_ids', instance.authors),
       merchant_id = request.user.id
     )
 
