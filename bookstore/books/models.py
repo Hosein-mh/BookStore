@@ -1,16 +1,7 @@
 from django.db import models
 from users.models import User
-
-class TimeStampedModel(models.Model):
-  ''' 
-    An abstract base Model for auto creating timestamps
-  '''
-  created_at = models.DateTimeField(auto_now_add=True)
-  updated_at = models.DateTimeField(auto_now=True)
-  class Meta:
-    abstract=True
-
-class Book(TimeStampedModel):
+from utils.models import BaseModel
+class Book(BaseModel):
   def __str__(self):
     return self.title
 
@@ -27,7 +18,7 @@ class Book(TimeStampedModel):
     return authors
     
 
-class Category(TimeStampedModel):
+class Category(BaseModel):
   def __str__(self):
     return self.name
   
@@ -38,14 +29,14 @@ class Category(TimeStampedModel):
     verbose_name_plural = "categories"
 
 
-class Author(TimeStampedModel):
+class Author(BaseModel):
   def __str__(self):
       return self.name
   
   name = models.CharField(max_length=255)
 
 
-class Tag(TimeStampedModel):
+class Tag(BaseModel):
   def __str__(self):
     return self.name
 
