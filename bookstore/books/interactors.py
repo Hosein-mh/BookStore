@@ -10,25 +10,28 @@ def add_book_item(*, title, price, category, tags, author_ids, merchant_id):
   valid_authors = []
   message = ""
 
+  if title is None:
+    return 422, None
+
+  if merchant_id is None:
+    return 422, None
+
   try:
     merchant = User.objects.get(pk=merchant_id)
     if not merchant.user_type == UserTypeEnum.MERCHANT.value:
-      return 400, None
+      return 404, None
     pass
   except User.DoesNotExist:
-      return 400, None
+      return 404, None
 
   try:
     category_item = Category.objects.get(id=category)
   except Category.DoesNotExist:
       return 404, None
 
-  for author_id in author_ids:
-    author = Author.objects.filter(id=author_id).first()
-    if author is not None:
-      valid_authors.append(author)
+  authors = Author.objects.filter(id__in=author_ids)
   
-  if len(valid_authors) < 1:
+  if len(authors) < 1:
     return 406, None
 
   # create book tags:
@@ -47,32 +50,12 @@ def add_book_item(*, title, price, category, tags, author_ids, merchant_id):
       book_item.tags.add(created_tag)
   book_item.save()
   # create object of book_author model from implementing m2m relationship
-  for author in valid_authors:
+  for author in authors:
     Book_Author.objects.create(book=book_item, author=author)
   
   return 201, book_item
     
 def update_book_item(*, request, instance, title, price, category, author_ids, merchant_id, tags=None):
-  valid_authors = []
-  if merchant_id is None:
-    content = {"merchant_id": ["is Required"]}
-    return 400, content
-
-  try:
-    merchant = User.objects.get(pk=merchant_id)
-    if not merchant.user_type == UserTypeEnum.MERCHANT.value:
-      return 403, {"permission denied": "only merchant can update books"}
-    pass
-  except User.DoesNotExist:
-      return 404, {"merchant": "Not found"}
-
-  if request.user.user_type == UserTypeEnum.MERCHANT and merchant != request.user:
-    return 403, {"merchant": ["your not the merchant of this book"]}
-
-  if not is_valid_authors(author_ids=author_ids):
-    content = {"author_ids": ["list of author_ids are required"]}
-    return 400, content
-
   valid_authors = []
   try:
     category_item = Category.objects.get(id=category)
@@ -80,24 +63,22 @@ def update_book_item(*, request, instance, title, price, category, author_ids, m
       return 404, None
 
   # get the past book authors and update them with new data
-  book_authors = [book_author.author_id for book_author in Book_Author.objects.filter(book=instance)]
+  book_authors = instance.authors
 
-  for author_id in author_ids:
-    author = Author.objects.filter(id=author_id).first()
-    if author is not None:
-      valid_authors.append(author)
-      if author.id not in book_authors:
-        Book_Author.objects.create(book=instance, author=author)
+  valid_authors = Author.objects.filter(id__in=author_ids)
 
-  valid_author_ids = [author.id for author in valid_authors]
+  if len(valid_authors) == 0:
+    valid_authors = book_authors
 
   for book_author in book_authors:
-    if book_author not in valid_author_ids:
+    if book_author not in valid_authors:
       Book_Author.objects.filter(book=instance, author=book_author).delete()
 
-
-  if len(valid_authors) < 1:
-    return 406, {"author_ids": ["is not valid"]}
+  for valid_author in valid_authors:
+    if valid_author in book_authors:
+      continue
+    else:
+      Book_Author.objects.create(author=valid_author, book=instance)
 
   # all valid
   instance.title = title or instance['title']
