@@ -6,9 +6,9 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly, SAFE_METHODS
 
-from books.models import Book, Author, Category, Book_Author
+from books.models import Book, Author, Category, Book_Author, Tag
 from books.interactors import add_book_item, is_valid_authors, update_book_item
-from books.permissions import IsMerchantOrReadOnly, isAdminOrMerchantOrReadOnly
+from books.permissions import IsMerchantOrReadOnly, isAdminOrMerchantOrReadOnly, IsAdminOrReadOnly
 from users.models import User, UserTypeEnum
 
 from books.serializers import AuthorSerializer, BookSerializer, \
@@ -17,70 +17,65 @@ from books.serializers import AuthorSerializer, BookSerializer, \
 class AuthorViewSet(viewsets.ModelViewSet):
   queryset = Author.objects.all()
   serializer_class = AuthorSerializer
-  permission_classes = (isAdminOrMerchantOrReadOnly,)
+  permission_classes = (IsAdminOrReadOnly)
   
 
 class CategoryViewSet(viewsets.ModelViewSet):
   queryset = Category.objects.all()
   serializer_class = CategorySerializer
-  permission_classes = (isAdminOrMerchantOrReadOnly,)
+  permission_classes = (IsAdminOrReadOnly,)
 
 
 class BookViewSet(viewsets.ModelViewSet):
   serializer_class = BookSerializer
-  permission_classes = (IsMerchantOrReadOnly,)
   filter_backends = (DjangoFilterBackend,)
   filter_class = BookFilter
   
   # Merchant only can see, update and delete his own books
   def get_queryset(self):
-    """ get tags from query_params"""
-    tags = None
-    if self.request.query_params:
-      try:
-        tags = self.request.query_params['tags'].split(' ')
-      except:
-        tags = None
 
     """ access to staff users and merchants or read only """
     if self.request.method in SAFE_METHODS or self.request.user.is_staff:
       self.queryset = Book.objects.all()
     else:
       self.queryset = Book.objects.filter(merchant=self.request.user)
-    
+
+    """ filter books based on tags from query_params"""
+    tags = self.request.query_params.get('tags', None)
     if tags:
-      return self.queryset.filter(tags__name__in=tags)
+      tags = Tag.objects.filter(name__in=tags.split(' '))
+      return self.queryset.filter(tags__in=tags)
     else: return self.queryset
+
+  def get_permissions(self):
+    if self.request.method == 'GET':
+      permission_classes = [IsAdminOrReadOnly]
+    else:
+      permission_classes = [IsMerchantOrReadOnly]
+
+    return [permission() for permission in permission_classes]
+
 
 
   def create(self, request, *args, **kwargs):
     author_ids = request.data.get('author_ids', None)
-    merchant = None
-
-    # merchants can add books for own
-    if request.user.user_type == UserTypeEnum.MERCHANT.value:
-      merchant = request.user.id
-
+    merchant_id = request.user.id
 
     # staff can add books for merchants
     if request.user.is_staff:
-      merchant = request.data.get('merchant_id', None)
-
-    if merchant is None:
-      content = {"merchant_id": ["is Required"]}
-      return Response(content, status=status.HTTP_400_BAD_REQUEST)
+      merchant_id = request.data.get('merchant_id', None)
 
     if not is_valid_authors(author_ids=author_ids):
       content = {"author_ids": ["list of author_ids are required"]}
       return Response(content, status=status.HTTP_400_BAD_REQUEST)
 
     insert_status, item = add_book_item(
-      title = request.data['title'],
-      price = request.data['price'],
-      category = request.data['category'],
-      tags = request.data['tags'],
+      title = request.data.get('title', None),
+      price = request.data.get('price', None),
+      category = request.data.get('category', None),
+      tags = request.data.get('tags', None),
       author_ids = author_ids,
-      merchant_id = merchant,
+      merchant_id = merchant_id,
     )
 
     serializer = self.get_serializer(item)
@@ -88,14 +83,10 @@ class BookViewSet(viewsets.ModelViewSet):
 
 
   def update(self, request, pk=None):
-    permission_classes = (IsMerchantOrReadOnly,)
-
     try:
       instance = self.get_queryset().get(pk=pk)
     except Book.DoesNotExist:
       return Response({"Book": "no books founds in your merchant books"}, status=404)
-
-    print('found book:', instance)
 
     insert_status, item = update_book_item(
       request = request,
