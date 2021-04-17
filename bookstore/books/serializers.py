@@ -25,17 +25,9 @@ class TagSerializer(serializers.ModelSerializer):
     fields = ('id', 'name')
 
 class BookSerializer(serializers.ModelSerializer):
-  authors = serializers.SerializerMethodField()
+  authors = AuthorSerializer(many=True)
   tags = TagSerializer(read_only=True, many=True)
 
   class Meta:
     model = Book
     fields = ('id', 'title', 'tags', 'merchant', 'category', 'price', 'authors', 'created_at', 'updated_at')
-    
-
-  def get_authors(self, obj):
-    book_authors = Book_Author.objects.filter(book=obj)
-    authors = []
-    if len(book_authors) > 0 :
-      authors = [AuthorSerializer(book_author.author).data for book_author in book_authors]
-    return authors
