@@ -50,5 +50,10 @@ class Book_Author(models.Model): # seperately Implementing m2m relationship
   book = models.ForeignKey(Book, on_delete=models.CASCADE)
   author = models.ForeignKey(Author, on_delete=models.CASCADE)
 
+  class Meta:
+    constraints = [
+      models.UniqueConstraint(fields=['book', 'author'], name='unique_book_author'),
+    ]
+
   
   
