@@ -8,6 +8,7 @@ class BookAdmin(admin.ModelAdmin):
   list_filter = ('created_at',)
   search_fields = ('title', 'tags__name')
   ordering = ('created_at',)
+  filter_horizontal = ('tags',)
 
 admin.site.register(Book, BookAdmin)
 admin.site.register(Category)
