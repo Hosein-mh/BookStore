@@ -6,7 +6,7 @@ class Book(BaseModel):
     return self.title
 
   title = models.CharField(max_length=255)
-  price = models.IntegerField(default=0)
+  price = models.IntegerField(blank=False)
   merchant = models.ForeignKey(User, on_delete=models.CASCADE)
   category = models.ForeignKey('Category', on_delete=models.CASCADE)
   tags = models.ManyToManyField("Tag", related_name='books', blank=True)
